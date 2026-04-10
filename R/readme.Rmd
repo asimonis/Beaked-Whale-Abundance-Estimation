@@ -1,0 +1,67 @@
+# Initial notes from Taiki 2026-04-09
+
+RoboJayFunctions.R contains code to do the detection function estimation and
+most of the data formatting.
+
+RoboJeffFunctions.R contains the code to do the Bayesian modeling portions of
+the code.
+
+RoboJScriptSimplified.R is the only file you should need to interact with, the
+other files just need to be sourced so that it can access the functions.
+
+The easiest way to get started is probably to create a copy of the Script file
+where you will change the various parameters to your needs - if you just make
+the changes within the original RoboJScriptSimplified.R file then you will run
+into conflict messages when pulling any new code from GitHub.
+
+# Identifying potential problems
+
+Most of lines 1-30 is just changing variables to what they will be for your
+dataset - paths to data, hydrophone depth, animal depth, etc. The only odd
+one here is the `stationPattern`. This is used to convert the name of the
+database for each drift into a short-hand name that will be used to pair up
+other pieces of data later (mostly the recorder duty cycle information). If you
+have questions on the other values, I (Taiki) am probably not the one with the
+answer since those are just species-specific or analysis-specific parameters
+that I dont really understand I just used whatever Jay/Jeff had.
+
+`stationPattern` should be a Regular Expression where the part you want to pull
+out of the database name is wrapped in parentheses. If you aren't very familiar
+with RegEx you can just ask Taiki for help, exact formatting will depend on
+how your databases are named. Its not really important what particular naming
+scheme you want to use (DRIFT004 vs just 4 vs whatever), just that it is consistent
+because you will use this name later to pair other data to the data from this database.
+
+Some examples:
+
+```{r}
+db <- 'CCES_004_Database.sqlite'
+# To pull CCES_004 from this
+stationPattern <- '^(CCES_[0-9]{1,3}).*'
+gsub(stationPattern, '\\1', db)
+# To pull 004 from this
+stationPattern <- '^CCES_([0-9]{1,3}).*'
+gsub(stationPattern, '\\1', db)
+db <- 'Drift22_CCES_Database.sqlite3'
+# To pull Drift22
+stationPattern <- '^(Drift[0-9]{1,2}).*'
+gsub(stationPattern, '\\1', db)
+# To pull 22
+stationPattern <- '^Drift([0-9]{1,2}).*'
+gsub(stationPattern, '\\1', db)
+```
+
+Next likely problem is line 38, `createSSPList`. This function just has to download
+a lot of HYCOM data - the servers can be really unreliable and this can take a long
+time. If you get errors about not being able to download data, try increasing the 
+`timeout` value to maybe 360 or higher (this number is how many seconds it should
+try to download).
+
+Next likely problem is line 52, setting up the `recorderInfo`. The important part here is
+that the value for the `station` column matches the outputs from however you 
+set up your `stationPattern` earlier.
+
+I *think* that those are the most likely places to hit a problem of the variety
+"Im getting an error and I cant continue" vs a problem of the variety "Code runs
+but I dont know if this answer is good". So hopefully you can at least run
+the remaining lines.
