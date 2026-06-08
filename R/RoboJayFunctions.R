@@ -157,7 +157,7 @@ doAngleCorrection <- function(x, sspList, hpDepth=110, animalDepth=1000) {
         x <- rename(x, angle = Angle)
     }
     bind_rows(lapply(split(x, x$sspGroup), function(d) {
-        thisAngle <- rtAngle[[x$sspGroup[1]]]
+        thisAngle <- rtAngle[[d$sspGroup[1]]]
         goodIx <- seq_along(thisAngle$angle)
         tmpAngle <- d$angle - 90
         angleIndex <- round(tmpAngle + 1 - thisAngle$angle[1])
