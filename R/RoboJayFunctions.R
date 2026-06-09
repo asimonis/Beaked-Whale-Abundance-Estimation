@@ -110,14 +110,15 @@ fmtEventId <- function(x) {
     id
 }
 
-createSSPList <- function(x, time=3600*24*1, file=NULL, pascal=FALSE, timeout=240) {
+createSSPList <- function(x, time=3600*24*1, file=NULL, pascal=FALSE, timeout=240,
+                          nc=NULL, ncVars=c('salinity', 'water_temp')) {
     if(pascal) {
         x <- rename(x, c('Latitude'='lat', 'Longitude'='long', 'UTC'='ClickDateTime'))
     }
     sspCoords <- bind_rows(lapply(split(x, x$sspGroup), function(s) {
         s[which.min(s$UTC)[1], c('UTC','Latitude', 'Longitude', 'sspGroup')]
     }))
-    sspList <- createSSP(sspCoords, dropNA=TRUE, timeout=timeout)
+    sspList <- createSSP(sspCoords, nc=nc, ncVars=ncVars, dropNA=TRUE, timeout=timeout)
     names(sspList) <- sspCoords$sspGroup
     if(!is.null(file)) {
         saveRDS(sspList, file)
