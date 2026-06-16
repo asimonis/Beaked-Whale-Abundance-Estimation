@@ -12,13 +12,13 @@ pps <- PAMpalSettings(db=db, binaries=bin, sr_hz='auto', winLen_sec=.0025,
 # data <- setSpecies(data, method='pamguard')
 # saveRDS(data,file='F:/Beaked_whale_data/AcousticStudy/AcousticStudy_01_EventsOnly.rds')
 
-# # save this "data" object with saveRDS so you can load later and skip this portion
-# recFolder <- 'D:/'
-# data <- addRecordings(data, folder=recFolder)
-# saveRDS(data,file='F:/Beaked_whale_data/AcousticStudy/AcousticStudy_02_EventswRecordings.rds')
-# 
-# data <- addGps(data) #GPS tracks in CalCurCEAS 2024 Drifter Analysis Github repo
-# saveRDS(data,file='F:/Beaked_whale_data/AcousticStudy/AcousticStudy_03_EventswRecordingsGPS.rds')
+# save this "data" object with saveRDS so you can load later and skip this portion
+recFolder <- 'D:/'
+data <- addRecordings(data, folder=recFolder)
+saveRDS(data,file='F:/Beaked_whale_data/AcousticStudy/CombinedStudy_02_EventswRecordings.rds')
+
+data <- addGps(data) #GPS tracks in CalCurCEAS 2024 Drifter Analysis Github repo
+saveRDS(data,file='F:/Beaked_whale_data/AcousticStudy/CombinedStudy_03_EventswRecordingsGPS.rds')
 
 #Load in saved Acoustic Study with GPS data
 data<-readRDS('F:/Beaked_whale_data/AcousticStudy/AcousticStudy_03_EventswRecordingsGPS.rds')
@@ -71,31 +71,31 @@ table(is.na(eventClicks$angleCorrected))  # confirm clean
 # dutyCycle is "minutes on/minutes off" so 2 of 10 minutes is 2/8
 recorderInfo <- tribble(
   ~station, ~dutyCycle, ~recorder, ~deployTime, ~retrTime,
-  1, '6/6', 'ST640', '2024-08-17 18:58', '2024-08-25 13:30',
-  2, '6/6', 'ST640', '2024-08-20 13:32', '2024-08-30 1:50',
-  3, '6/6', 'ST640', '2024-08-20 20:35', '2024-08-30 5:30',
-  4, '6/6', 'ST640', '2024-08-21 3:56', '2024-08-28 3:15',
-  6, '6/6', 'ST640', '2024-08-23 0:46', '2024-08-30 15:39',
-  8, '6/6', 'ST640', '2024-09-13 22:03', '2024-09-21 23:40',
-  9, '6/6', 'ST640', '2024-09-14 13:54', '2024-09-23 21:33',
-  10, '6/6', 'ST640', '2024-09-14 21:18', '2024-09-24 1:30',
-  11, '6/6', 'ST640', '2024-09-15 16:55', '2024-09-22 15:14',
-  12, '6/6', 'ST640', '2024-10-01 23:00', '2024-10-05 3:17',
-  13, '6/6', 'ST640', '2024-10-02 0:53', '2024-10-04 4:15',
-  14, '6/6', 'ST640', '2024-10-02 1:46', '2024-10-05 2:10',
-  15, '6/6', 'ST640', '2024-10-05 14:24', '2024-10-11 14:48',
-  16, '6/6', 'ST640', '2024-10-06 1:58', '2024-10-13 16:09',
-  17, '6/6', 'ST640', '2024-10-06 14:38', '2024-10-12 14:15',
-  18, '6/6', 'ST640', '2024-10-06 23:46', '2024-10-11 21:51',
-  19, '6/6', 'ST640', '2024-10-09 4:53', '2024-10-15 21:55',
-  20, '6/6', 'ST640', '2024-10-26 14:49', '2024-11-09 9:36',
-  21, '6/6', 'ST640', '2024-10-27 1:03', '2024-11-07 14:55',
-  22, '6/6', 'ST640', '2024-10-27 14:08', '2024-11-09 7:38',
-  23, '6/6', 'ST640', '2024-10-28 0:00', '2024-11-11 6:24',
-  24, '6/6', 'ST640', '2024-11-11 1:55', '2024-11-24 15:19',
-  25, '6/6', 'ST640', '2024-11-20 16:41', '2024-12-03 17:17',
-  26, '6/6', 'ST640', '2024-11-22 14:34', '2024-12-02 23:09',
-  27, '6/6', 'ST640', '2024-11-23 15:59', '2024-12-03 6:25'
+  1, '6/0', 'ST640', '2024-08-17 18:58', '2024-08-25 13:30',
+  2, '6/0', 'ST640', '2024-08-20 13:32', '2024-08-30 1:50',
+  3, '6/0', 'ST640', '2024-08-20 20:35', '2024-08-30 5:30',
+  4, '6/0', 'ST640', '2024-08-21 3:56', '2024-08-28 3:15',
+  6, '6/0', 'ST640', '2024-08-23 0:46', '2024-08-30 15:39',
+  8, '6/0', 'ST640', '2024-09-13 22:03', '2024-09-21 23:40',
+  9, '6/0', 'ST640', '2024-09-14 13:54', '2024-09-23 21:33',
+  10, '6/0', 'ST640', '2024-09-14 21:18', '2024-09-24 1:30',
+  11, '6/0', 'ST640', '2024-09-15 16:55', '2024-09-22 15:14',
+  12, '6/0', 'ST640', '2024-10-01 23:00', '2024-10-05 3:17',
+  13, '6/0', 'ST640', '2024-10-02 0:53', '2024-10-04 4:15',
+  14, '6/0', 'ST640', '2024-10-02 1:46', '2024-10-05 2:10',
+  15, '6/0', 'ST640', '2024-10-05 14:24', '2024-10-11 14:48',
+  16, '6/0', 'ST640', '2024-10-06 1:58', '2024-10-13 16:09',
+  17, '6/0', 'ST640', '2024-10-06 14:38', '2024-10-12 14:15',
+  18, '6/0', 'ST640', '2024-10-06 23:46', '2024-10-11 21:51',
+  19, '6/0', 'ST640', '2024-10-09 4:53', '2024-10-15 21:55',
+  20, '6/0', 'ST640', '2024-10-26 14:49', '2024-11-09 9:36',
+  21, '6/0', 'ST640', '2024-10-27 1:03', '2024-11-07 14:55',
+  22, '6/0', 'ST640', '2024-10-27 14:08', '2024-11-09 7:38',
+  23, '6/0', 'ST640', '2024-10-28 0:00', '2024-11-11 6:24',
+  24, '6/0', 'ST640', '2024-11-11 1:55', '2024-11-24 15:19',
+  25, '6/0', 'ST640', '2024-11-20 16:41', '2024-12-03 17:17',
+  26, '6/0', 'ST640', '2024-11-22 14:34', '2024-12-02 23:09',
+  27, '6/0', 'ST640', '2024-11-23 15:59', '2024-12-03 6:25'
 )
 recorderInfo$deployTime <- as.POSIXct(recorderInfo$deployTime, format="%Y-%m-%d %H:%M", tz='UTC')
 recorderInfo$retrTime <- as.POSIXct(recorderInfo$retrTime, format="%Y-%m-%d %H:%M", tz='UTC')
