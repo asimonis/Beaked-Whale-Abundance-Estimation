@@ -3,25 +3,27 @@
 library(PAMpal)
 library(here)
 
-db <- 'F:/Beaked_whale_data/Databases'
-bin <- 'F:/Beaked_whale_data/Binaries'
-pps <- PAMpalSettings(db=db, binaries=bin, sr_hz='auto', winLen_sec=.0025,
-                      filterfrom_khz=10, filterto_khz=NULL)
+# db <- 'F:/Beaked_whale_data/Databases/'
+# bin <- 'F:/Beaked_whale_data/Binaries/'
+# pps <- PAMpalSettings(db=db, binaries=bin, sr_hz='auto', winLen_sec=.0025,
+#                       filterfrom_khz=10, filterto_khz=NULL)
 
 # data <- processPgDetections(pps, mode='db', id='RoboJStudy')
 # data <- setSpecies(data, method='pamguard')
-# saveRDS(data,file='F:/Beaked_whale_data/AcousticStudy/AcousticStudy_01_EventsOnly.rds')
+# saveRDS(data,file='F:/Beaked_whale_data/AcousticStudy/CalCurCEAS_Combined_EventsOnly.rds')
+# data<-readRDS(file='F:/Beaked_whale_data/AcousticStudy/CalCurCEAS_Combined_EventsOnly.rds')
+# 
+# # save this "data" object with saveRDS so you can load later and skip this portion
+# recFolder <- 'F:/'
+# data <- addRecordings(data, folder=recFolder)
 
-# save this "data" object with saveRDS so you can load later and skip this portion
-recFolder <- 'D:/'
-data <- addRecordings(data, folder=recFolder)
-saveRDS(data,file='F:/Beaked_whale_data/AcousticStudy/CombinedStudy_02_EventswRecordings.rds')
-
-data <- addGps(data) #GPS tracks in CalCurCEAS 2024 Drifter Analysis Github repo
-saveRDS(data,file='F:/Beaked_whale_data/AcousticStudy/CombinedStudy_03_EventswRecordingsGPS.rds')
+# saveRDS(data,file='F:/Beaked_whale_data/AcousticStudy/CalCurCEAS_Combined_EventswRecordings.rds')
+# 
+# data <- addGps(data) #GPS tracks in CalCurCEAS 2024 Drifter Analysis Github repo
+# saveRDS(data,file='F:/Beaked_whale_data/AcousticStudy/CombinedStudy_03_EventswRecordingsGPS.rds')
 
 #Load in saved Acoustic Study with GPS data
-data<-readRDS('F:/Beaked_whale_data/AcousticStudy/AcousticStudy_03_EventswRecordingsGPS.rds')
+data<-readRDS('F:/Beaked_whale_data/AcousticStudy/CombinedStudy_03_EventswRecordingsGPS.rds')
 
 #### parameters for rest of analysis ####
 hpDepth <- 150          # hydrophone depth (m)
@@ -53,18 +55,23 @@ eventClicks <- splitSSPGroups(eventClicks, splitBy='station', time=3600*24*1)
 #                          timeout=360)
 
 # Can read this from disk if running again in future on same data (change date for future)
-sspList <- readRDS(here('RoboJayOutputs','2026-06-05_sspList.rds'))
+sspList <- readRDS(here('RoboJayOutputs','2026-06-18_sspList.rds'))
 
-# filter to whatever species for this project
-eventClicks <- filter(eventClicks, species == 'ZC')
+# # filter to whatever species for this project
+# eventClicks <- filter(eventClicks, species == 'ZC')
+# 
+# # Uses the SSP to correct angles using raytrace, then applies raytrace angle correction
+# # to existing angles. May be quite slow since raytracing can take some time
+# eventClicks <- doAngleCorrection(eventClicks, sspList=sspList,hpDepth=hpDepth, animalDepth=animalDepth)
+# 
+# #Omit corrected angles that are NA values
+# eventClicks <- eventClicks[!is.na(eventClicks$angleCorrected), ]
+# table(is.na(eventClicks$angleCorrected))  # confirm clean
 
-# Uses the SSP to correct angles using raytrace, then applies raytrace angle correction
-# to existing angles. May be quite slow since raytracing can take some time
-eventClicks <- doAngleCorrection(eventClicks, sspList=sspList,hpDepth=hpDepth, animalDepth=animalDepth)
+##Save eventClicks to avoid future runs
+# saveRDS(eventClicks,'F:/Beaked_whale_data/AcousticStudy/EventClicks_wAngleCorrections.rds')
 
-#Omit corrected angles that are NA values
-eventClicks <- eventClicks[!is.na(eventClicks$angleCorrected), ]
-table(is.na(eventClicks$angleCorrected))  # confirm clean
+eventClicks<-readRDS('F:/Beaked_whale_data/AcousticStudy/EventClicks_wAngleCorrections.rds')
 
 # make this for your dataset
 # needs these columns, "station" must match labels created with "stationPattern" earlier
@@ -144,6 +151,7 @@ ehOut <- bugs(data=ehData, inits=NULL,
               model.file=ehModel, n.chains=ehSpecs$nc, n.iter=ehSpecs$ni,
               n.burnin=ehSpecs$nb, n.thin=ehSpecs$nt,
               saveExec=FALSE, debug=TRUE, OpenBUGS.pgm=NULL, working.directory=getwd(), clearWD=TRUE)
+saveRDS(ehOut,file='F:/Beaked_whale_data/Bayesian Model/ehOut_20260619.rds')
 
 erSpecs <- list(
     ni = 200000,  # chain length, including burn-in
@@ -179,3 +187,11 @@ erOut <- bugs(data=erData, inits=NULL, parameters.to.save=erParams, model.file=e
               n.chains=erSpecs$nc, n.iter=erSpecs$ni, n.burnin=erSpecs$nb,
               n.thin=erSpecs$nt, saveExec=FALSE, debug=TRUE, OpenBUGS.pgm=NULL,
               working.directory=getwd(), clearWD=TRUE, bugs.seed=2)
+
+save(erOut,file='F:/Beaked_whale_data/Bayesian Model/erOut_20260619.rds')
+
+
+### Evaluate Model Output ###
+erOut$mean$N            # posterior mean across all kept iterations, both chains pooled
+erOut$sd$N               # posterior SD
+erOut$summary["N", ]     # mean, SD, and quantiles (2.5%, 25%, 50%, 75%, 97.5%) including the CI
