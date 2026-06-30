@@ -110,14 +110,15 @@ fmtEventId <- function(x) {
     id
 }
 
-createSSPList <- function(x, time=3600*24*1, file=NULL, pascal=FALSE, timeout=240) {
+createSSPList <- function(x, time=3600*24*1, file=NULL, pascal=FALSE, timeout=240,
+                          nc=NULL, ncVars=c('salinity', 'water_temp')) {
     if(pascal) {
         x <- rename(x, c('Latitude'='lat', 'Longitude'='long', 'UTC'='ClickDateTime'))
     }
     sspCoords <- bind_rows(lapply(split(x, x$sspGroup), function(s) {
         s[which.min(s$UTC)[1], c('UTC','Latitude', 'Longitude', 'sspGroup')]
     }))
-    sspList <- createSSP(sspCoords, dropNA=TRUE, timeout=timeout)
+    sspList <- createSSP(sspCoords, nc=nc, ncVars=ncVars, dropNA=TRUE, timeout=timeout)
     names(sspList) <- sspCoords$sspGroup
     if(!is.null(file)) {
         saveRDS(sspList, file)
@@ -137,15 +138,32 @@ doAngleCorrection <- function(x, sspList, hpDepth=110, animalDepth=1000) {
         angles <- 1:87
         # hpDepth <- 110
         # animalDepth <- 1000 + 1
+        if(max(newdata$depth) < animalDepth) {
+          useDepth <- max(newdata$depth)
+          warning('animalDepth is deeper than bottom depth in sspGroup ', 
+                  names(sspList)[ix+1],
+                  ', angle will be traced from maximum depth instead.')
+        } else {
+          useDepth <- animalDepth
+        }
         rt <- raytrace(0, hpDepth, angles, 7, zz=newdata$depth, cc=newdata$soundSpeed, plot = FALSE, progress=FALSE)
         angleOut <- rep(0, length(angles))
+        angleOut2 <- rep(0, length(angles))
+        # original jay version, i think this indexing is incorrect
         for(i in seq_along(angleOut)) {
-            angleOut[i] <- atan((rt$z[[i]][animalDepth+1] - hpDepth)/
-                                    rt$x[[i]][animalDepth+1]) * 180 / pi
+            angleOut[i] <- atan((rt$z[[i]][useDepth+1] - hpDepth)/
+                                    rt$x[[i]][useDepth+1]) * 180 / pi
+        }
+        # correct, but doesnt end up being different
+        # basically the line is pretty much straight between the two,
+        # so unless the ray really turns in ~hpDepth meters it will be ~same
+        for(i in seq_along(angleOut)) {
+            angleOut2[i] <- atan((rt$z[[i]][useDepth + 1 - hpDepth] - hpDepth)/
+                                    rt$x[[i]][useDepth + 1 - hpDepth]) * 180 / pi
         }
         ix <<- ix + 1
         setTxtProgressBar(pb, value=ix)
-        list(angle=angles, correction=angleOut - angles)
+        list(angle=angles, correction=angleOut2 - angles)
     })
 
 
@@ -179,8 +197,8 @@ markSnapshotId <- function(x, snapshot=2, pascal=FALSE) {
     x$snapIx <- NULL
     bind_rows(lapply(split(x, x$station), function(s) {
         bind_rows(lapply(split(s, s$eventId), function(e) {
-            # isCont <- grepl('/0$', e$dutyCycle[1])
-            isCont <- FALSE # testing station 6 issues. Is there a good reason to do other
+            isCont <- grepl('/0$', e$dutyCycle[1])
+            # isCont <- FALSE # testing station 6 issues. Is there a good reason to do other
             # split? I think we can double count either way...
             if(isCont) {
                 e$compTime <- floor_date(min(e$UTC), unit=paste0(snapshot, 'min'))
@@ -932,7 +950,7 @@ markOffCycle <- function(dutyCycle='2/8', snapshot=2, ncol, maxTime, shift=0) {
         oneCyc <- c(oneCyc, TRUE)
     }
     if(shift > 0 &&
-       shift < on/snapshot) {
+       shift < length(oneCyc)) {
         oneCyc <- c(oneCyc[(shift+1):length(oneCyc)], oneCyc[1:shift])
     }
     # cycleMark <- rep(
