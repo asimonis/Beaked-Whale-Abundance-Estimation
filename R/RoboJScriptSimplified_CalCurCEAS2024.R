@@ -140,18 +140,20 @@ ehSpecs <- list(
 ehParams <- c("phi1", "p1",
              "mean.availtime.min")
 
-##### Source model file #####
-ehModel <- makeEhModel()
+# ##### Source model file #####
+# ehModel <- makeEhModel()
+# 
+# ##### Run BUGS analysis #####
+# # With R2OpenBUGS this opens up the openbugs program while running, you
+# # will need to exit from there when it is done running
+# ehOut <- bugs(data=ehData, inits=NULL,
+#               parameters.to.save=ehParams,
+#               model.file=ehModel, n.chains=ehSpecs$nc, n.iter=ehSpecs$ni,
+#               n.burnin=ehSpecs$nb, n.thin=ehSpecs$nt,
+#               saveExec=FALSE, debug=TRUE, OpenBUGS.pgm=NULL, working.directory=getwd(), clearWD=TRUE)
+# saveRDS(ehOut,file='F:/Beaked_whale_data/Bayesian Model/ehOut_20260619.rds')
 
-##### Run BUGS analysis #####
-# With R2OpenBUGS this opens up the openbugs program while running, you
-# will need to exit from there when it is done running
-ehOut <- bugs(data=ehData, inits=NULL,
-              parameters.to.save=ehParams,
-              model.file=ehModel, n.chains=ehSpecs$nc, n.iter=ehSpecs$ni,
-              n.burnin=ehSpecs$nb, n.thin=ehSpecs$nt,
-              saveExec=FALSE, debug=TRUE, OpenBUGS.pgm=NULL, working.directory=getwd(), clearWD=TRUE)
-saveRDS(ehOut,file='F:/Beaked_whale_data/Bayesian Model/ehOut_20260619.rds')
+ehOut<-readRDS(file='F:/Beaked_whale_data/Bayesian Model/ehOut_20260619.rds')
 
 erSpecs <- list(
     ni = 200000,  # chain length, including burn-in
@@ -160,38 +162,43 @@ erSpecs <- list(
     nc = 2       # number of chains
 )
 
-##### source the model file #####
-erModel <- makeErModel()
-
-##### Set parameters to monitor #####
-erParams <- c("v.mean", "er.mean",                                 # effective search area and radius
-              "logDgrp.hyper", "logDgrp.sig",                      # random effect parameters for log-density
-              "logDgrp", "logDgrp.err", "Dper1000", "mu",          # parameters for individual DASBRs
-              "mean.of.Errs", "SD.of.Errs", "mean.of.logDgrp",     # descriptive summary stats for individuals DASBR estimates (model checks)
-              "Dgrp.mean", "D.mean.per1000", "N",                  # mean density and abundance for the study area (use)
-              "Dgrp.mean.II","D.mean.per1000.II",  "N.II",         # mean density and abundance for the study area, alternate (do not use)
-              "s", "g0")
-
-erData <- erDataPrep(eventSummary, snaps=snapCount, snapshot=snapshot,
-                     detFunction = detFunction$All,
-                     ehOut=ehOut,
-                     ddpMean=ddpMean,
-                     ddpSd=ddpSd,
-                     gsizeMean=gsizeMean,
-                     gsizeSd = gsizeSd,
-                     plot=FALSE, plotDir=file.path(outDir, 'ERPlot'),meanDepth = animalDepth,
-                     hpDepth = hpDepth, truncDist = truncDist, A=studyArea)
-
-##### Run BUGS analysis #####
-erOut <- bugs(data=erData, inits=NULL, parameters.to.save=erParams, model.file=erModel,
-              n.chains=erSpecs$nc, n.iter=erSpecs$ni, n.burnin=erSpecs$nb,
-              n.thin=erSpecs$nt, saveExec=FALSE, debug=TRUE, OpenBUGS.pgm=NULL,
-              working.directory=getwd(), clearWD=TRUE, bugs.seed=2)
-
-save(erOut,file='F:/Beaked_whale_data/Bayesian Model/erOut_20260619.rds')
-
+# ##### source the model file #####
+# erModel <- makeErModel()
+# 
+# ##### Set parameters to monitor #####
+# erParams <- c("v.mean", "er.mean",                                 # effective search area and radius
+#               "logDgrp.hyper", "logDgrp.sig",                      # random effect parameters for log-density
+#               "logDgrp", "logDgrp.err", "Dper1000", "mu",          # parameters for individual DASBRs
+#               "mean.of.Errs", "SD.of.Errs", "mean.of.logDgrp",     # descriptive summary stats for individuals DASBR estimates (model checks)
+#               "Dgrp.mean", "D.mean.per1000", "N",                  # mean density and abundance for the study area (use)
+#               "Dgrp.mean.II","D.mean.per1000.II",  "N.II",         # mean density and abundance for the study area, alternate (do not use)
+#               "s", "g0")
+# 
+# erData <- erDataPrep(eventSummary, snaps=snapCount, snapshot=snapshot,
+#                      detFunction = detFunction$All,
+#                      ehOut=ehOut,
+#                      ddpMean=ddpMean,
+#                      ddpSd=ddpSd,
+#                      gsizeMean=gsizeMean,
+#                      gsizeSd = gsizeSd,
+#                      plot=FALSE, plotDir=file.path(outDir, 'ERPlot'),meanDepth = animalDepth,
+#                      hpDepth = hpDepth, truncDist = truncDist, A=studyArea)
+# 
+# ##### Run BUGS analysis #####
+# erOut <- bugs(data=erData, inits=NULL, parameters.to.save=erParams, model.file=erModel,
+#               n.chains=erSpecs$nc, n.iter=erSpecs$ni, n.burnin=erSpecs$nb,
+#               n.thin=erSpecs$nt, saveExec=FALSE, debug=TRUE, OpenBUGS.pgm=NULL,
+#               working.directory=getwd(), clearWD=TRUE, bugs.seed=2)
+# 
+# saveRDS(erOut,file='F:/Beaked_whale_data/Bayesian Model/erOut_20260619.rds')
+erOut<-readRDS(file='F:/Beaked_whale_data/Bayesian Model/erOut_20260630.rds')
 
 ### Evaluate Model Output ###
 erOut$mean$N            # posterior mean across all kept iterations, both chains pooled
 erOut$sd$N               # posterior SD
 erOut$summary["N", ]     # mean, SD, and quantiles (2.5%, 25%, 50%, 75%, 97.5%) including the CI
+
+#Running into a convergence problem
+#Potential Solutions:
+#Consider running longer chain lengths
+#Use model output from PASCAL as informative priors
